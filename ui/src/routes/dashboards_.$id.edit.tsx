@@ -29,7 +29,7 @@ import {
   copyToClipboard,
 } from "../lib/utils";
 import { editorStorage } from "../lib/editorStorage";
-import { IDashboard } from "../lib/types";
+import { IDashboard, IConnection, ConnectionsResponse } from "../lib/types";
 import { Button } from "../components/tremor/Button";
 import { useQueryApi } from "../hooks/useQueryApi";
 import { MenuProvider } from "../components/providers/MenuProvider";
@@ -74,8 +74,11 @@ export const Route = createFileRoute("/dashboards_/$id/edit")({
     }
   },
   loader: async ({ params: { id }, context: { queryApi } }) => {
-    const data = await queryApi(`dashboards/${id}/info`);
-    return data as IDashboard;
+    const [dashboard, connectionsData] = await Promise.all([
+      queryApi(`dashboards/${id}/info`) as Promise<IDashboard>,
+      queryApi("connections").catch(() => ({ connections: [] })) as Promise<ConnectionsResponse>,
+    ]);
+    return { dashboard, connections: connectionsData.connections };
   },
   component: DashboardEditor,
 });
@@ -83,7 +86,9 @@ export const Route = createFileRoute("/dashboards_/$id/edit")({
 function DashboardEditor () {
   const params = Route.useParams();
   const { vars } = Route.useSearch();
-  const dashboard = Route.useLoaderData();
+  const loaderData = Route.useLoaderData() as { dashboard: IDashboard; connections: IConnection[] };
+  const connections = loaderData.connections || [];
+  const dashboard = loaderData.dashboard;
   const router = useRouter();
   const auth = useAuth();
   const queryApi = useQueryApi();
@@ -94,6 +99,9 @@ function DashboardEditor () {
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(dashboard.name);
   const [savingName, setSavingName] = useState(false);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string>(
+    dashboard.connectionId || "",
+  );
   const [previewId, setPreviewId] = useState<string | undefined>(undefined);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -151,6 +159,7 @@ function DashboardEditor () {
           path: dashboard.path,
           content: runningQuery,
           temporary: true,
+          connectionId: selectedConnectionId || undefined,
         },
         signal: abortController.signal,
       });
@@ -182,7 +191,7 @@ function DashboardEditor () {
         setIsPreviewLoading(false);
       }
     }
-  }, [queryApi, runningQuery, navigate, dashboard]);
+  }, [queryApi, runningQuery, navigate, dashboard, selectedConnectionId]);
 
   const handleRun = useCallback(() => {
     if (editorQuery !== runningQuery) {
@@ -391,6 +400,35 @@ function DashboardEditor () {
     }
   };
 
+  const handleConnectionChange = async (connectionId: string) => {
+    setSelectedConnectionId(connectionId);
+    try {
+      await queryApi(`dashboards/${params.id}/connection`, {
+        method: "POST",
+        body: { connectionId: connectionId || null },
+      });
+      toast({
+        title: "Success",
+        description: connectionId
+          ? "Connection updated"
+          : "Switched to local DuckDB",
+      });
+      router.invalidate();
+    } catch (error) {
+      if (isRedirect(error)) {
+        return navigate(error.options);
+      }
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred",
+        variant: "error",
+      });
+    }
+  };
+
   const handleOpenVisibilityDialog = () => {
     setSelectedVisibility(dashboard.visibility || "private");
     setPassword("");
@@ -465,6 +503,23 @@ function DashboardEditor () {
                     <RiFileCopyLine className="size-4" />
                   </Button>
                 </div>
+              </div>
+              <div className="mt-4 px-4">
+                <div className="text-sm font-medium text-ctext2 dark:text-dtext2 mb-2">
+                  Connection
+                </div>
+                <select
+                  value={selectedConnectionId}
+                  onChange={(e) => handleConnectionChange(e.target.value)}
+                  className="w-full px-2 py-1.5 bg-cbgs dark:bg-dbgs border border-cb dark:border-db rounded text-sm text-ctext dark:text-dtext"
+                >
+                  <option value="">Local DuckDB</option>
+                  {connections.map((conn) => (
+                    <option key={conn.id} value={conn.id}>
+                      {conn.name} ({conn.host}:{conn.port})
+                    </option>
+                  ))}
+                </select>
               </div>
               <VariablesMenu onVariablesChange={previewDashboard} />
               {(systemConfig.publicSharingEnabled ||

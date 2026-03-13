@@ -8,8 +8,6 @@ import (
 	"net/url"
 	"shaper/server/util"
 	"strings"
-
-	"github.com/duckdb/duckdb-go/v2"
 )
 
 // When downloading a PDF we also need to allow access if the users has the permission to see the parent dashboard
@@ -31,7 +29,11 @@ func DashboardContainsMatchingPdfDownload(app *App, ctx context.Context, parentD
 		return false, err
 	}
 
-	conn, err := app.DuckDB.Connx(ctx)
+	db, err := app.ConnPool.GetDB(ctx, dashboardQuery.ConnectionID)
+	if err != nil {
+		return false, fmt.Errorf("Error getting db: %v", err)
+	}
+	conn, err := db.Connx(ctx)
 	if err != nil {
 		return false, fmt.Errorf("Error getting conn: %v", err)
 	}
@@ -116,7 +118,7 @@ func DashboardContainsMatchingPdfDownload(app *App, ctx context.Context, parentD
 					if rInfo.DownloadIdIndex != nil {
 						v := query.Rows[0][*rInfo.DownloadIdIndex]
 						if v != nil {
-							id := v.(duckdb.Union).Value.(string)
+							id, _ := unwrapValue(v).(string)
 							if id == pdfDashboardId {
 								return true, nil
 							}

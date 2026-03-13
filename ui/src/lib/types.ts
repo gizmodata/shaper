@@ -23,6 +23,26 @@ interface ITaskInfo {
 
 export type IDashboard = Omit<IApp, "type"> & {
   content: string;
+  connectionId?: string;
+};
+
+export interface IConnection {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  username: string;
+  useTls: boolean;
+  skipVerify: boolean;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export type ConnectionsResponse = {
+  connections: IConnection[];
 };
 
 export type Column = {

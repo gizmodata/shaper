@@ -20,6 +20,7 @@ import { Route as TasksIdRouteImport } from './routes/tasks.$id'
 import { Route as DashboardsIdRouteImport } from './routes/dashboards.$id'
 import { Route as AdminSecurityRouteImport } from './routes/admin.security'
 import { Route as AdminKeysRouteImport } from './routes/admin.keys'
+import { Route as AdminConnectionsRouteImport } from './routes/admin.connections'
 import { Route as DashboardsIdEditRouteImport } from './routes/dashboards_.$id.edit'
 
 const SignupRoute = SignupRouteImport.update({
@@ -77,6 +78,11 @@ const AdminKeysRoute = AdminKeysRouteImport.update({
   path: '/keys',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConnectionsRoute = AdminConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
+  getParentRoute: () => AdminRoute,
+} as any)
 const DashboardsIdEditRoute = DashboardsIdEditRouteImport.update({
   id: '/dashboards_/$id/edit',
   path: '/dashboards/$id/edit',
@@ -90,6 +96,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/signup': typeof SignupRoute
+  '/admin/connections': typeof AdminConnectionsRoute
   '/admin/keys': typeof AdminKeysRoute
   '/admin/security': typeof AdminSecurityRoute
   '/dashboards/$id': typeof DashboardsIdRoute
@@ -103,6 +110,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/signup': typeof SignupRoute
+  '/admin/connections': typeof AdminConnectionsRoute
   '/admin/keys': typeof AdminKeysRoute
   '/admin/security': typeof AdminSecurityRoute
   '/dashboards/$id': typeof DashboardsIdRoute
@@ -118,6 +126,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/new': typeof NewRoute
   '/signup': typeof SignupRoute
+  '/admin/connections': typeof AdminConnectionsRoute
   '/admin/keys': typeof AdminKeysRoute
   '/admin/security': typeof AdminSecurityRoute
   '/dashboards/$id': typeof DashboardsIdRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/signup'
+    | '/admin/connections'
     | '/admin/keys'
     | '/admin/security'
     | '/dashboards/$id'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/signup'
+    | '/admin/connections'
     | '/admin/keys'
     | '/admin/security'
     | '/dashboards/$id'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/new'
     | '/signup'
+    | '/admin/connections'
     | '/admin/keys'
     | '/admin/security'
     | '/dashboards/$id'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminKeysRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/connections': {
+      id: '/admin/connections'
+      path: '/connections'
+      fullPath: '/admin/connections'
+      preLoaderRoute: typeof AdminConnectionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/dashboards_/$id/edit': {
       id: '/dashboards_/$id/edit'
       path: '/dashboards/$id/edit'
@@ -271,12 +290,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminConnectionsRoute: typeof AdminConnectionsRoute
   AdminKeysRoute: typeof AdminKeysRoute
   AdminSecurityRoute: typeof AdminSecurityRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminConnectionsRoute: AdminConnectionsRoute,
   AdminKeysRoute: AdminKeysRoute,
   AdminSecurityRoute: AdminSecurityRoute,
   AdminIndexRoute: AdminIndexRoute,

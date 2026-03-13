@@ -85,6 +85,16 @@ func (app *App) HandleState(msg jetstream.Msg) {
 		handler = HandleMoveItems
 	case "rename_folder":
 		handler = HandleRenameFolder
+	case "create_connection":
+		handler = HandleCreateConnection
+	case "update_connection":
+		handler = HandleUpdateConnection
+	case "delete_connection":
+		handler = HandleDeleteConnection
+	case "update_connection_status":
+		handler = HandleUpdateConnectionStatus
+	case "update_dashboard_connection":
+		handler = HandleUpdateDashboardConnection
 	}
 	app.Logger.Debug("Handling shaper state change", slog.String("event", event))
 	ok := handler(app, data)

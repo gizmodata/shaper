@@ -23,12 +23,13 @@ type CreateDashboardPayload struct {
 }
 
 type TmpDashboard struct {
-	Path    string `json:"path"`
-	Name    string `json:"name"`
-	Content string `json:"content"`
+	Path         string  `json:"path"`
+	Name         string  `json:"name"`
+	Content      string  `json:"content"`
+	ConnectionID *string `json:"connectionId,omitempty"`
 }
 
-func CreateDashboard(app *App, ctx context.Context, name string, content string, path string, temporary bool, requestedID string) (string, error) {
+func CreateDashboard(app *App, ctx context.Context, name string, content string, path string, temporary bool, requestedID string, connectionID *string) (string, error) {
 	actor := ActorFromContext(ctx)
 	if actor == nil {
 		return "", fmt.Errorf("no actor in context")
@@ -40,9 +41,10 @@ func CreateDashboard(app *App, ctx context.Context, name string, content string,
 	if temporary {
 		key := TMP_DASHBOARD_PREFIX + id
 		d := TmpDashboard{
-			Name:    name,
-			Path:    path,
-			Content: content,
+			Name:         name,
+			Path:         path,
+			Content:      content,
+			ConnectionID: connectionID,
 		}
 		j, err := json.Marshal(d)
 		if err != nil {

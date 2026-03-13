@@ -106,7 +106,7 @@ func handleDeployCreate(ctx context.Context, app *core.App, idx int, data api.Da
 		}
 	}
 
-	id, err := core.CreateDashboard(app, ctx, name, content, path, false, requestedID)
+	id, err := core.CreateDashboard(app, ctx, name, content, path, false, requestedID, nil)
 	if err != nil {
 		return deployResult{}, fmt.Errorf("apps[%d]: %w", idx, err)
 	}

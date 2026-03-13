@@ -14,6 +14,7 @@ import { useAuth, getJwt } from "../lib/auth";
 import { Dashboard } from "../components/dashboard";
 import { isMac, varsParamSchema, cx } from "../lib/utils";
 import { editorStorage } from "../lib/editorStorage";
+import type { IConnection, ConnectionsResponse } from "../lib/types";
 import { Button } from "../components/tremor/Button";
 import { useQueryApi } from "../hooks/useQueryApi";
 import { MenuProvider } from "../components/providers/MenuProvider";
@@ -140,7 +141,15 @@ function NewDashboard () {
   const [dashboardName, setDashboardName] = useState("");
   const [loadStartTime, setLoadStartTime] = useState<number | null>(null);
   const [loadEndTime, setLoadEndTime] = useState<number | null>(null);
+  const [connections, setConnections] = useState<IConnection[]>([]);
+  const [selectedConnectionId, setSelectedConnectionId] = useState<string>("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    queryApi("connections")
+      .then((data: ConnectionsResponse) => setConnections(data.connections || []))
+      .catch(() => {});
+  }, [queryApi]);
 
   // Check for unsaved changes when component mounts or type changes
   useEffect(() => {
@@ -172,6 +181,7 @@ function NewDashboard () {
           path,
           content: runningQuery,
           temporary: true,
+          connectionId: selectedConnectionId || undefined,
         },
       });
       setPreviewId(id);
@@ -182,7 +192,7 @@ function NewDashboard () {
       }
       setPreviewError(err instanceof Error ? err.message : "Unknown error");
     }
-  }, [queryApi, runningQuery, navigate, path]);
+  }, [queryApi, runningQuery, navigate, path, selectedConnectionId]);
 
   const runTask = useCallback(async () => {
     setPreviewError(null);
@@ -301,6 +311,13 @@ function NewDashboard () {
             path: path || "/",
           },
         });
+        // Set connection if one was selected
+        if (selectedConnectionId) {
+          await queryApi(`dashboards/${id}/connection`, {
+            method: "POST",
+            body: { connectionId: selectedConnectionId },
+          });
+        }
         // Clear localStorage after successful save
         editorStorage.clearChanges("new");
         clearStoredAppType(); // Reset the app type preference
@@ -409,6 +426,25 @@ function NewDashboard () {
         <div className="h-[42dvh] flex flex-col overflow-y-hidden max-h-[90dvh] min-h-[12dvh] resize-y shrink-0 shadow-sm dark:shadow-none">
           <div className="flex items-center px-2 border-b border-cb dark:border-none">
             <MenuTrigger className="pr-2">
+              {appType === "dashboard" && (
+                <div className="mt-4 px-4">
+                  <div className="text-sm font-medium text-ctext2 dark:text-dtext2 mb-2">
+                    Connection
+                  </div>
+                  <select
+                    value={selectedConnectionId}
+                    onChange={(e) => setSelectedConnectionId(e.target.value)}
+                    className="w-full px-2 py-1.5 bg-cbgs dark:bg-dbgs border border-cb dark:border-db rounded text-sm text-ctext dark:text-dtext"
+                  >
+                    <option value="">Local DuckDB</option>
+                    {connections.map((conn) => (
+                      <option key={conn.id} value={conn.id}>
+                        {conn.name} ({conn.host}:{conn.port})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {appType === "dashboard" && (
                 <VariablesMenu onVariablesChange={previewDashboard} />
               )}

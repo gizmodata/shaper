@@ -21,6 +21,8 @@ function Admin () {
   let selectedTab = "users";
   if (location.pathname.endsWith("/admin/keys")) {
     selectedTab = "keys";
+  } else if (location.pathname.endsWith("/admin/connections")) {
+    selectedTab = "connections";
   } else if (location.pathname.endsWith("/admin/security")) {
     selectedTab = "security";
   }
@@ -63,6 +65,9 @@ function Admin () {
                 </TabsTrigger>
                 <TabsTrigger value="keys" asChild>
                   <Link to="/admin/keys">API Keys</Link>
+                </TabsTrigger>
+                <TabsTrigger value="connections" asChild>
+                  <Link to="/admin/connections">Connections</Link>
                 </TabsTrigger>
                 <TabsTrigger value="security" asChild>
                   <Link to="/admin/security">Security</Link>

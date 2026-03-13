@@ -55,7 +55,11 @@ func StreamQueryCSV(
 	}
 	query := sqls[queryIndex]
 
-	conn, err := app.DuckDB.Connx(ctx)
+	db, err := app.ConnPool.GetDB(ctx, dashboard.ConnectionID)
+	if err != nil {
+		return fmt.Errorf("Error getting db: %v", err)
+	}
+	conn, err := db.Connx(ctx)
 	if err != nil {
 		return fmt.Errorf("Error getting conn: %v", err)
 	}
@@ -237,7 +241,11 @@ func StreamQueryXLSX(
 		}),
 	}
 
-	conn, err := app.DuckDB.Connx(ctx)
+	db, err := app.ConnPool.GetDB(ctx, dashboard.ConnectionID)
+	if err != nil {
+		return fmt.Errorf("Error getting db: %v", err)
+	}
+	conn, err := db.Connx(ctx)
 	if err != nil {
 		return fmt.Errorf("Error getting conn: %v", err)
 	}
@@ -361,13 +369,13 @@ func getDisplayWidth(value any) float64 {
 		return 4 // Width of "null"
 	}
 
+	value = unwrapValue(value)
+
 	switch v := value.(type) {
 	case time.Time:
 		return 20 // Approximate width for RFC3339 format
 	case duckdb.Interval:
 		return float64(len(intervalToString(v)))
-	case duckdb.Union:
-		return getDisplayWidth(v.Value)
 	default:
 		str := fmt.Sprintf("%v", value)
 		return float64(len(str))
@@ -409,6 +417,8 @@ func formatValue(value any) string {
 		return ""
 	}
 
+	value = unwrapValue(value)
+
 	switch v := value.(type) {
 	case []byte:
 		if isUUID(v) {
@@ -426,8 +436,6 @@ func formatValue(value any) string {
 			strValues = append(strValues, formatValue(item))
 		}
 		return strings.Join(strValues, ", ")
-	case duckdb.Union:
-		return formatValue(v.Value)
 	default:
 		return fmt.Sprintf("%v", v)
 	}

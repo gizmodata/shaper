@@ -172,6 +172,14 @@ func routes(e *echo.Echo, app *core.App, frontendFS fs.FS, modTime time.Time, cu
 	apiWithAuth.GET("/keys", handler.ListAPIKeys(app))
 	apiWithAuth.POST("/keys", handler.CreateAPIKey(app))
 	apiWithAuth.DELETE("/keys/:id", handler.DeleteAPIKey(app))
+	apiWithAuth.GET("/connections", handler.ListConnections(app))
+	apiWithAuth.POST("/connections", handler.CreateConnection(app))
+	apiWithAuth.PUT("/connections/:id", handler.UpdateConnection(app))
+	apiWithAuth.DELETE("/connections/:id", handler.DeleteConnection(app))
+	apiWithAuth.POST("/connections/:id/test", handler.TestConnection(app))
+	apiWithAuth.POST("/connections/:id/oauth/start", handler.OAuthStart(app))
+	apiWithAuth.POST("/connections/:id/oauth/complete", handler.OAuthComplete(app))
+	apiWithAuth.POST("/dashboards/:id/connection", handler.SaveDashboardConnection(app))
 	apiWithAuth.POST("/admin/reset-jwt-secret", handler.ResetJWTSecret(app))
 
 	// Static assets - aggressive caching

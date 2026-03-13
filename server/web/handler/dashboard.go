@@ -29,10 +29,11 @@ func CreateDashboard(app *core.App) echo.HandlerFunc {
 		}
 
 		var request struct {
-			Name      string `json:"name"`
-			Content   string `json:"content"`
-			Path      string `json:"path"`
-			Temporary bool   `json:"temporary"`
+			Name         string  `json:"name"`
+			Content      string  `json:"content"`
+			Path         string  `json:"path"`
+			Temporary    bool    `json:"temporary"`
+			ConnectionID *string `json:"connectionId"`
 		}
 		if err := c.Bind(&request); err != nil {
 			return c.JSONPretty(http.StatusBadRequest,
@@ -75,7 +76,7 @@ func CreateDashboard(app *core.App) echo.HandlerFunc {
 			}
 		}
 
-		id, err := core.CreateDashboard(app, c.Request().Context(), request.Name, request.Content, request.Path, request.Temporary, "")
+		id, err := core.CreateDashboard(app, c.Request().Context(), request.Name, request.Content, request.Path, request.Temporary, "", request.ConnectionID)
 		if err != nil {
 			c.Logger().Error("error creating dashboard:", slog.Any("error", err))
 			return c.JSONPretty(http.StatusBadRequest,

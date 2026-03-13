@@ -24,6 +24,7 @@ type App struct {
 	Version                    string
 	Sqlite                     *sqlx.DB
 	DuckDB                     *sqlx.DB
+	ConnPool                   *ConnectionPool
 	Logger                     *slog.Logger
 	LoginRequired              bool
 	BasePath                   string
@@ -158,6 +159,7 @@ func New(
 		TaskBroadcastSubject:       taskBroadcastSubject,
 		TaskTimers:                 make(map[string]*time.Timer),
 	}
+	app.ConnPool = NewConnectionPool(app)
 	return app, nil
 }
 
@@ -317,6 +319,9 @@ func (app *App) setupStreamAndConsumer() error {
 }
 
 func (app *App) Close() {
+	if app.ConnPool != nil {
+		app.ConnPool.Close()
+	}
 	if app.StateConsumeCtx != nil {
 		app.StateConsumeCtx.Drain()
 		<-app.StateConsumeCtx.Closed()

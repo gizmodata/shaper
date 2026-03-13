@@ -153,5 +153,30 @@ func initSQLite(sdb *sqlx.DB) error {
 		return fmt.Errorf("error creating state_consumer table: %w", err)
 	}
 
+	// Create connections table
+	_, err = sdb.Exec(`
+		CREATE TABLE IF NOT EXISTS connections (
+			id TEXT PRIMARY KEY,
+			name TEXT NOT NULL,
+			host TEXT NOT NULL,
+			port INTEGER NOT NULL,
+			username TEXT NOT NULL DEFAULT '',
+			password_encrypted TEXT NOT NULL DEFAULT '',
+			use_tls BOOLEAN NOT NULL DEFAULT 0,
+			skip_verify BOOLEAN NOT NULL DEFAULT 0,
+			status TEXT NOT NULL DEFAULT 'active',
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			created_by TEXT,
+			updated_by TEXT
+		)
+	`)
+	if err != nil {
+		return fmt.Errorf("error creating connections table: %w", err)
+	}
+
+	// Add connection_id to apps table (ignore error if column already exists)
+	sdb.Exec(`ALTER TABLE apps ADD COLUMN connection_id TEXT REFERENCES connections(id) ON DELETE SET NULL`)
+
 	return nil
 }

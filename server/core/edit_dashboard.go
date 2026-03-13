@@ -51,19 +51,20 @@ func GetDashboardInfo(app *App, ctx context.Context, id string) (Dashboard, erro
 		json.Unmarshal(entry.Value(), &d)
 		visibility := "private"
 		dashboard := Dashboard{
-			ID:         id,
-			CreatedAt:  entry.Created(),
-			UpdatedAt:  entry.Created(),
-			Visibility: &visibility,
-			Name:       d.Name,
-			Path:       d.Path,
-			Content:    d.Content,
+			ID:           id,
+			CreatedAt:    entry.Created(),
+			UpdatedAt:    entry.Created(),
+			Visibility:   &visibility,
+			Name:         d.Name,
+			Path:         d.Path,
+			Content:      d.Content,
+			ConnectionID: d.ConnectionID,
 		}
 		return dashboard, nil
 	}
 	var dashboard Dashboard
 	err := app.Sqlite.GetContext(ctx, &dashboard,
-		`SELECT id, folder_id, name, content, created_at, updated_at, created_by, updated_by, visibility
+		`SELECT id, folder_id, name, content, created_at, updated_at, created_by, updated_by, visibility, connection_id
 		FROM apps
 		WHERE id = $1 AND type = 'dashboard'`, id)
 	if err != nil {
